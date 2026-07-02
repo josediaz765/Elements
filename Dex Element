@@ -16306,17 +16306,32 @@ if getgenv then
 		local root = __DEXPPGetRoot()
 		if not root or typeof(gui) ~= "Instance" then return false end
 		if gui:IsA("ScreenGui") then
-			if gui.Name == "MainMenu" then gui.Enabled = false return true end
-			if gui:FindFirstChild("LeftToggle") or gui:FindFirstChild("RightToggle") then gui.Enabled = false return true end
-			local main = gui:FindFirstChild("Main")
-			if gui.Name == "Window" and main and main:IsA("GuiObject") then
-				main.Parent = root
-				main.Position = UDim2.new(0, 0, 0, 0)
-				main.Size = UDim2.new(1, 0, 1, 0)
-				main.Active = true
-				return true
+			local bucket = root:FindFirstChild("DexScreen_" .. gui.Name)
+			if not bucket then
+				bucket = Instance.new("Frame")
+				bucket.Name = "DexScreen_" .. gui.Name
+				bucket.BackgroundTransparency = 1
+				bucket.ClipsDescendants = true
+				bucket.Size = UDim2.new(1, 0, 1, 0)
+				bucket.Parent = root
 			end
-			return false
+			for _, child in ipairs(gui:GetChildren()) do
+				if child:IsA("GuiObject") then
+					child.Parent = bucket
+					child.Active = true
+					if child.Name == "Main" or gui.Name == "Window" then
+						child.AnchorPoint = Vector2.new(0, 0)
+						child.Position = UDim2.new(0, 0, 0, 0)
+						child.Size = UDim2.new(1, 0, 1, 0)
+					elseif gui.Name == "MainMenu" then
+						child.AnchorPoint = Vector2.new(0, 0)
+						child.Position = UDim2.new(0, 0, 0, 0)
+						child.Size = UDim2.new(1, 0, 1, 0)
+					end
+				end
+			end
+			gui.Enabled = false
+			return true
 		elseif gui:IsA("GuiObject") then
 			gui.Parent = root
 			return true
