@@ -16306,16 +16306,7 @@ if getgenv then
 		local root = __DEXPPGetRoot()
 		if not root or typeof(gui) ~= "Instance" then return false end
 		if gui:IsA("ScreenGui") then
-			if gui.Name == "Intro" then return false end
-			gui.Enabled = true
-			local moved = false
-			for _, child in ipairs(gui:GetChildren()) do
-				if child:IsA("GuiObject") then
-					child.Parent = root
-					moved = true
-				end
-			end
-			return moved
+			return false
 		elseif gui:IsA("GuiObject") then
 			gui.Parent = root
 			return true
