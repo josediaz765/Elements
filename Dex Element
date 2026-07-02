@@ -16306,6 +16306,16 @@ if getgenv then
 		local root = __DEXPPGetRoot()
 		if not root or typeof(gui) ~= "Instance" then return false end
 		if gui:IsA("ScreenGui") then
+			if gui.Name == "MainMenu" then gui.Enabled = false return true end
+			if gui:FindFirstChild("LeftToggle") or gui:FindFirstChild("RightToggle") then gui.Enabled = false return true end
+			local main = gui:FindFirstChild("Main")
+			if gui.Name == "Window" and main and main:IsA("GuiObject") then
+				main.Parent = root
+				main.Position = UDim2.new(0, 0, 0, 0)
+				main.Size = UDim2.new(1, 0, 1, 0)
+				main.Active = true
+				return true
+			end
 			return false
 		elseif gui:IsA("GuiObject") then
 			gui.Parent = root
@@ -16327,6 +16337,8 @@ end
 		source = source:gsub("self%.Gui%.Parent = nil", "pcall(function() if self.GuiElems and self.GuiElems.Main then self.GuiElems.Main.Visible = false end end)\n\t\t\tself.Gui.Parent = nil")
 		source = source:gsub("funcs.Hide = function%(self%)\n\t\t\tself.Gui.Parent = nil", "funcs.Hide = function(self)\n\t\t\tpcall(function() if self.GuiElems and self.GuiElems.Main then self.GuiElems.Main.Visible = false end end)\n\t\t\tself.Gui.Parent = nil", 1)
 		source = source:gsub("Lib%.ShowGui%(gui%)\n\tend\n\n\tMain%.SetupFilesystem", "Lib.ShowGui(gui)\n\t\tif getgenv and getgenv().__DEXPP_EMBED_HOST and gui and gui.OpenButton then\n\t\t\tgui.OpenButton.AnchorPoint = Vector2.new(0, 0)\n\t\t\tgui.OpenButton.Position = UDim2.new(0, 8, 0, 6)\n\t\tend\n\tend\n\n\tMain.SetupFilesystem", 1)
+		source = source:gsub("v%.Gui%.Main", "v.GuiElems.Main")
+		source = source:gsub("window%.Gui%.Main", "window.GuiElems.Main")
 		return source
 	end
 	function Dex:Clear()
