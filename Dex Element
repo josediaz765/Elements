@@ -1,3 +1,18 @@
+function ElementFunction:AddDex(DexConfig)
+	DexConfig = DexConfig or {}
+	DexConfig.Name = DexConfig.Name or "Dex"
+	DexConfig.Height = DexConfig.Height or 560
+	DexConfig.AutoLoad = DexConfig.AutoLoad ~= false
+	DexConfig.Callback = DexConfig.Callback or function() end
+	local FullDexSource = [=[
+--[[
+	Dex++
+	Version 3.1
+	
+	Developed by Chillz
+	Decompiler fixed + rspy plugin + adonis bypass by mcdaggitt,
+	Dex++ is a revival of Moon's Dex, made to fulfill Moon's Dex prophecy.
+]]
 
 local selection
 local nodes = {}
@@ -16321,3 +16336,217 @@ local function InitAdonisBypass()
 end
 
 InitAdonisBypass()
+]=]
+	local Dex = {Name = DexConfig.Name, Type = "Dex", Loaded = false, Loading = false, Host = nil}
+	local frame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", nil, 0, 8), {
+		Size = UDim2.new(1, 0, 0, DexConfig.Height),
+		Parent = ItemParent,
+		ClipsDescendants = true
+	}), {
+		AddThemeObject(MakeElement("Stroke", nil, 1.2), "Stroke"),
+		Create("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 0)})
+	}), "Second")
+	local top = AddThemeObject(SetChildren(SetProps(MakeElement("Frame"), {
+		Name = "DexTopBar",
+		Size = UDim2.new(1, 0, 0, 38),
+		LayoutOrder = 1,
+		Parent = frame
+	}), {
+		MakeElement("Padding", 0, 10, 10, 0)
+	}), "Main")
+	local title = AddThemeObject(SetProps(MakeElement("Label", DexConfig.Name, 14), {
+		Size = UDim2.new(1, -185, 1, 0),
+		Position = UDim2.new(0, 0, 0, 0),
+		Font = Enum.Font.GothamBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = top
+	}), "Text")
+	local status = AddThemeObject(SetProps(MakeElement("Label", "Ready", 12), {
+		Size = UDim2.new(0, 116, 1, 0),
+		Position = UDim2.new(1, -184, 0, 0),
+		Font = Enum.Font.GothamSemibold,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		TextTransparency = 0.25,
+		Parent = top
+	}), "TextDark")
+	local reloadButton = AddThemeObject(SetChildren(SetProps(MakeElement("Button"), {
+		Name = "ReloadDex",
+		Size = UDim2.new(0, 62, 0, 24),
+		Position = UDim2.new(1, -62, 0.5, -12),
+		BackgroundTransparency = 0,
+		Parent = top
+	}), {
+		MakeElement("Corner", 0, 6),
+		AddThemeObject(MakeElement("Stroke", nil, 1), "Stroke"),
+		AddThemeObject(SetProps(MakeElement("Label", "Reload", 11), {Size = UDim2.new(1, 0, 1, 0), Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center}), "Text")
+	}), "Second")
+	local host = AddThemeObject(SetChildren(SetProps(MakeElement("Frame"), {
+		Name = "DexEmbedHost",
+		Size = UDim2.new(1, 0, 1, -38),
+		LayoutOrder = 2,
+		ClipsDescendants = true,
+		Parent = frame
+	}), {
+		AddThemeObject(MakeElement("Stroke", nil, 1), "Stroke")
+	}), "Main")
+	Dex.Host = host
+	Dex.Wrapper = frame
+	local function notify(name, content, image)
+		pcall(function()
+			if OrionLib and OrionLib.MakeNotification then
+				OrionLib:MakeNotification({Name = name or DexConfig.Name, Content = content or "", Image = image or "search", Time = 4})
+			end
+		end)
+	end
+	local function setStatus(text)
+		status.Text = tostring(text or "")
+	end
+	local function patchSource(source)
+		local inject = [==[
+local function __DEXPPGetHost()
+	local ok, host = pcall(function()
+		return getgenv and getgenv().__DEXPP_EMBED_HOST
+	end)
+	if ok and typeof(host) == "Instance" and host.Parent then
+		return host
+	end
+end
+local function __DEXPPGetRoot()
+	local host = __DEXPPGetHost()
+	if not host then return nil end
+	local env = getgenv and getgenv() or _G
+	local root = env.__DEXPP_EMBED_ROOT
+	local overlay = env.__DEXPP_EMBED_OVERLAY
+	if not overlay or not overlay.Parent or not root or not root.Parent then
+		local sg = Instance.new("ScreenGui")
+		sg.Name = "DexEmbeddedOverlay"
+		sg.IgnoreGuiInset = true
+		sg.ResetOnSpawn = false
+		sg.ZIndexBehavior = Enum.ZIndexBehavior.Global
+		sg.DisplayOrder = 999999
+		local clip = Instance.new("Frame")
+		clip.Name = "Root"
+		clip.BackgroundTransparency = 1
+		clip.ClipsDescendants = true
+		clip.Parent = sg
+		env.__DEXPP_EMBED_OVERLAY = sg
+		env.__DEXPP_EMBED_ROOT = clip
+		root = clip
+		local parent = nil
+		pcall(function() parent = gethui and gethui() end)
+		if not parent then pcall(function() parent = game:GetService("CoreGui") end) end
+		if not parent then parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") end
+		sg.Parent = parent
+		local rs = game:GetService("RunService")
+		if env.__DEXPP_EMBED_SYNC then pcall(function() env.__DEXPP_EMBED_SYNC:Disconnect() end) end
+		env.__DEXPP_EMBED_SYNC = rs.RenderStepped:Connect(function()
+			local h = __DEXPPGetHost()
+			local r = env.__DEXPP_EMBED_ROOT
+			if h and r then
+				local p = h.AbsolutePosition
+				local s = h.AbsoluteSize
+				r.Position = UDim2.fromOffset(p.X, p.Y)
+				r.Size = UDim2.fromOffset(s.X, s.Y)
+			end
+		end)
+	end
+	local p = host.AbsolutePosition
+	local s = host.AbsoluteSize
+	root.Position = UDim2.fromOffset(p.X, p.Y)
+	root.Size = UDim2.fromOffset(s.X, s.Y)
+	return root
+end
+if getgenv then
+	getgenv().__DEXPPMountScreen = function(gui)
+		local root = __DEXPPGetRoot()
+		if not root or typeof(gui) ~= "Instance" then return false end
+		if gui:IsA("ScreenGui") then
+			gui.Enabled = true
+			for _, child in ipairs(gui:GetChildren()) do
+				if child:IsA("GuiObject") then
+					child.Parent = root
+				end
+			end
+			return true
+		elseif gui:IsA("GuiObject") then
+			gui.Parent = root
+			return true
+		end
+		return false
+	end
+end
+]==]
+		if not source:find("__DEXPPGetHost", 1, true) then
+			source = source:gsub("local nodes = {}", "local nodes = {}\n" .. inject, 1)
+		end
+		source = source:gsub("Lib.ShowGui = Main.SecureGui", "Lib.ShowGui = function(gui)\n\tif getgenv and getgenv().__DEXPPMountScreen and getgenv().__DEXPPMountScreen(gui) then return end\n\treturn Main.SecureGui(gui)\nend", 1)
+		source = source:gsub("Main.SecureGui = function%(gui%)", "Main.SecureGui = function(gui)\n\t\tif getgenv and getgenv().__DEXPPMountScreen and getgenv().__DEXPPMountScreen(gui) then return end", 1)
+		source = source:gsub("sidesGui%.AbsoluteSize", "((getgenv and getgenv().__DEXPP_EMBED_HOST and getgenv().__DEXPP_EMBED_HOST.AbsoluteSize) or sidesGui.AbsoluteSize)")
+		source = source:gsub("local x,y = x or mouse%.X, y or mouse%.Y", "local x,y = x or mouse.X, y or mouse.Y\n\t\t\tlocal __dexHost = getgenv and getgenv().__DEXPP_EMBED_HOST\n\t\t\tif __dexHost then\n\t\t\t\tlocal __p = __dexHost.AbsolutePosition\n\t\t\t\tx = x - __p.X\n\t\t\t\ty = y - __p.Y\n\t\t\tend")
+		source = source:gsub("local maxX,maxY = mouse%.ViewSizeX,mouse%.ViewSizeY", "local maxX,maxY = mouse.ViewSizeX,mouse.ViewSizeY\n\t\t\tlocal __dexHostSize = getgenv and getgenv().__DEXPP_EMBED_HOST and getgenv().__DEXPP_EMBED_HOST.AbsoluteSize\n\t\t\tif __dexHostSize then maxX,maxY = __dexHostSize.X,__dexHostSize.Y end")
+		source = source:gsub("window%.Closed = false", "window.Closed = false\n\t\t\tpcall(function() window.GuiElems.Main.Visible = true end)", 1)
+		source = source:gsub("self%.Gui%.Parent = nil", "pcall(function() if self.GuiElems and self.GuiElems.Main then self.GuiElems.Main.Visible = false end end)\n\t\t\tself.Gui.Parent = nil")
+		source = source:gsub("funcs.Hide = function%(self%)\n\t\t\tself.Gui.Parent = nil", "funcs.Hide = function(self)\n\t\t\tpcall(function() if self.GuiElems and self.GuiElems.Main then self.GuiElems.Main.Visible = false end end)\n\t\t\tself.Gui.Parent = nil", 1)
+		source = source:gsub("Lib%.ShowGui%(gui%)\n\tend\n\n\tMain%.SetupFilesystem", "Lib.ShowGui(gui)\n\t\tif getgenv and getgenv().__DEXPP_EMBED_HOST and gui and gui.OpenButton then\n\t\t\tgui.OpenButton.AnchorPoint = Vector2.new(0, 0)\n\t\t\tgui.OpenButton.Position = UDim2.new(0, 8, 0, 6)\n\t\tend\n\tend\n\n\tMain.SetupFilesystem", 1)
+		return source
+	end
+	function Dex:Clear()
+		local env = getgenv and getgenv() or _G
+		if env.__DEXPP_EMBED_SYNC then pcall(function() env.__DEXPP_EMBED_SYNC:Disconnect() end) end
+		if env.__DEXPP_EMBED_OVERLAY then pcall(function() env.__DEXPP_EMBED_OVERLAY:Destroy() end) end
+		env.__DEXPP_EMBED_SYNC = nil
+		env.__DEXPP_EMBED_OVERLAY = nil
+		env.__DEXPP_EMBED_ROOT = nil
+		setStatus("Cleared")
+		return self
+	end
+	function Dex:Open()
+		if self.Loading then return self end
+		self.Loading = true
+		setStatus("Loading")
+		local ok, err = xpcall(function()
+			local env = getgenv and getgenv() or _G
+			env.__DEXPP_EMBED_HOST = host
+			self:Clear()
+			env.__DEXPP_EMBED_HOST = host
+			local source = patchSource(FullDexSource)
+			local chunk, loadErr = loadstring(source)
+			if not chunk then error(loadErr) end
+			local ran, runErr = pcall(chunk)
+			if not ran then error(runErr) end
+			self.Loaded = true
+			setStatus("Loaded")
+			notify(DexConfig.Name, "Full Dex loaded", "search")
+			SafeCallback(DexConfig.Callback, DexConfig.Name or "Dex", self)
+		end, debug and debug.traceback or tostring)
+		self.Loading = false
+		if not ok then
+			setStatus("Error")
+			notify(DexConfig.Name, tostring(err):sub(1, 180), "triangle-alert")
+			warn("Dex Element Error: " .. tostring(err))
+		end
+		return self
+	end
+	function Dex:Reload()
+		self:Clear()
+		return self:Open()
+	end
+	AddConnection(reloadButton.MouseButton1Click, function()
+		Dex:Reload()
+	end)
+	AddConnection(frame.AncestryChanged, function(_, parent)
+		if not parent then
+			Dex:Clear()
+		end
+	end)
+	if DexConfig.AutoLoad then
+		task.defer(function()
+			Dex:Open()
+		end)
+	end
+	table.insert(OrionLib.AllElements, Dex)
+	SetupElement(DexConfig, frame, nil, Dex)
+	return Dex
+end
+ElementFunction.AddDEX = ElementFunction.AddDex
+ElementFunction.AddDexExplorer = ElementFunction.AddDex
