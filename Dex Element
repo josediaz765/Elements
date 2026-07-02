@@ -15290,11 +15290,10 @@ Main = (function()
 	Main.SetMainGuiOpen = function(val)
 		Main.MainGuiOpen = val
 
-		Main.MainGui.OpenButton.Text = val and "Close" or "Dex++"
-		if val then Main.MainGui.OpenButton.MainFrame.Visible = true end
-		Main.MainGui.OpenButton.MainFrame:TweenSize(val and UDim2.new(0,224,0,200) or UDim2.new(0,0,0,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.2,true)
-		--Main.MainGui.OpenButton.BackgroundTransparency = val and 0 or (Lib.CheckMouseInGui(Main.MainGui.OpenButton) and 0 or 0.2)
-		service.TweenService:Create(Main.MainGui.OpenButton,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = val and 0 or (Lib.CheckMouseInGui(Main.MainGui.OpenButton) and 0 or 0.2)}):Play()
+		Main.MainGuiOpenButton.Text = val and "Close" or "Dex++"
+		if val then Main.MainGuiOpenButton.MainFrame.Visible = true end
+		Main.MainGuiOpenButton.MainFrame:TweenSize(val and UDim2.new(0,224,0,200) or UDim2.new(0,0,0,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.2,true)
+		service.TweenService:Create(Main.MainGuiOpenButton,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = val and 0 or (Lib.CheckMouseInGui(Main.MainGuiOpenButton) and 0 or 0.2)}):Play()
 
 		if Main.MainGuiMouseEvent then Main.MainGuiMouseEvent:Disconnect() end
 
@@ -15303,11 +15302,11 @@ Main = (function()
 			Main.MainGuiCloseTime = startTime
 			coroutine.wrap(function()
 				Lib.FastWait(0.2)
-				if not Main.MainGuiOpen and startTime == Main.MainGuiCloseTime then Main.MainGui.OpenButton.MainFrame.Visible = false end
+				if not Main.MainGuiOpen and startTime == Main.MainGuiCloseTime then Main.MainGuiOpenButton.MainFrame.Visible = false end
 			end)()
 		else
 			Main.MainGuiMouseEvent = service.UserInputService.InputBegan:Connect(function(input)
-				if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not Lib.CheckMouseInGui(Main.MainGui.OpenButton) and not Lib.CheckMouseInGui(Main.MainGui.OpenButton.MainFrame) then
+				if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not Lib.CheckMouseInGui(Main.MainGuiOpenButton) and not Lib.CheckMouseInGui(Main.MainGuiOpenButton.MainFrame) then
 
 					Main.SetMainGuiOpen(false)
 				end
@@ -15340,13 +15339,21 @@ Main = (function()
 			{21,"Frame",{BackgroundColor3=Color3.new(0,0.66666668653488,1),BorderSizePixel=0,Name="Highlight",Parent={18},Position=UDim2.new(0,0,1,-2),Size=UDim2.new(1,0,0,2),}},
 		})
 		Main.MainGui = gui
-		Main.AppsFrame = gui.OpenButton.MainFrame.AppsFrame
-		Main.AppsContainer = Main.AppsFrame.Container
-		Main.AppsContainerGrid = Main.AppsContainer.UIGridLayout
-		Main.AppTemplate = gui.App
+		local openButton = gui:FindFirstChild("OpenButton", true)
+		if not openButton then error("Dex OpenButton missing") end
+		Main.MainGuiOpenButton = openButton
+		local mainFrame = openButton:FindFirstChild("MainFrame", true)
+		if not mainFrame then error("Dex MainFrame missing") end
+		Main.AppsFrame = mainFrame:FindFirstChild("AppsFrame", true)
+		if not Main.AppsFrame then error("Dex AppsFrame missing") end
+		Main.AppsContainer = Main.AppsFrame:FindFirstChild("Container", true)
+		if not Main.AppsContainer then error("Dex AppsContainer missing") end
+		Main.AppsContainerGrid = Main.AppsContainer:FindFirstChildOfClass("UIGridLayout") or Main.AppsContainer:FindFirstChild("UIGridLayout")
+		if not Main.AppsContainerGrid then error("Dex AppsGrid missing") end
+		Main.AppTemplate = gui:FindFirstChild("App", true)
+		if not Main.AppTemplate then error("Dex App template missing") end
 		Main.MainGuiOpen = false
 
-		local openButton = gui.OpenButton
 		openButton.BackgroundTransparency = 0.2
 		openButton.MainFrame.Size = UDim2.new(0,0,0,0)
 		openButton.MainFrame.Visible = false
@@ -15356,13 +15363,13 @@ Main = (function()
 
 		openButton.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				service.TweenService:Create(Main.MainGui.OpenButton,TweenInfo.new(0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = 0}):Play()
+				service.TweenService:Create(Main.MainGuiOpenButton,TweenInfo.new(0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = 0}):Play()
 			end
 		end)
 
 		openButton.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				service.TweenService:Create(Main.MainGui.OpenButton,TweenInfo.new(0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = Main.MainGuiOpen and 0 or 0.2}):Play()
+				service.TweenService:Create(Main.MainGuiOpenButton,TweenInfo.new(0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = Main.MainGuiOpen and 0 or 0.2}):Play()
 			end
 		end)
 		
@@ -16350,7 +16357,7 @@ end
 		source = source:gsub("window%.Closed = false", "window.Closed = false\n\t\t\tpcall(function() window.GuiElems.Main.Visible = true end)", 1)
 		source = source:gsub("self%.Gui%.Parent = nil", "pcall(function() if self.GuiElems and self.GuiElems.Main then self.GuiElems.Main.Visible = false end end)\n\t\t\tself.Gui.Parent = nil")
 		source = source:gsub("funcs.Hide = function%(self%)\n\t\t\tself.Gui.Parent = nil", "funcs.Hide = function(self)\n\t\t\tpcall(function() if self.GuiElems and self.GuiElems.Main then self.GuiElems.Main.Visible = false end end)\n\t\t\tself.Gui.Parent = nil", 1)
-		source = source:gsub("Lib%.ShowGui%(gui%)\n\tend\n\n\tMain%.SetupFilesystem", "Lib.ShowGui(gui)\n\t\tif getgenv and getgenv().__DEXPP_EMBED_HOST and gui and gui.OpenButton then\n\t\t\tgui.OpenButton.AnchorPoint = Vector2.new(0, 0)\n\t\t\tgui.OpenButton.Position = UDim2.new(0, 8, 0, 6)\n\t\tend\n\tend\n\n\tMain.SetupFilesystem", 1)
+		source = source:gsub("Lib%.ShowGui%(gui%)\n\tend\n\n\tMain%.SetupFilesystem", "Lib.ShowGui(gui)\n\t\tif getgenv and getgenv().__DEXPP_EMBED_HOST and gui then\n\t\t\tlocal __dexOpen = gui:FindFirstChild(\"OpenButton\", true)\n\t\t\tif __dexOpen then\n\t\t\t\t__dexOpen.AnchorPoint = Vector2.new(0, 0)\n\t\t\t\t__dexOpen.Position = UDim2.new(0, 8, 0, 6)\n\t\t\tend\n\t\tend\n\tend\n\n\tMain.SetupFilesystem", 1)
 		source = source:gsub("v%.Gui%.Main", "v.GuiElems.Main")
 		source = source:gsub("window%.Gui%.Main", "window.GuiElems.Main")
 		return source
