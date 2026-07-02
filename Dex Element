@@ -5,14 +5,6 @@ function ElementFunction:AddDex(DexConfig)
 	DexConfig.AutoLoad = DexConfig.AutoLoad ~= false
 	DexConfig.Callback = DexConfig.Callback or function() end
 	local FullDexSource = [=[
---[[
-	Dex++
-	Version 3.1
-	
-	Developed by Chillz
-	Decompiler fixed + rspy plugin + adonis bypass by mcdaggitt,
-	Dex++ is a revival of Moon's Dex, made to fulfill Moon's Dex prophecy.
-]]
 
 local selection
 local nodes = {}
@@ -16544,8 +16536,24 @@ end
 			Dex:Open()
 		end)
 	end
-	table.insert(OrionLib.AllElements, Dex)
-	SetupElement(DexConfig, frame, nil, Dex)
+	if OrionLib and OrionLib.AllElements then table.insert(OrionLib.AllElements, Dex) end
+	if type(SetupElement) == "function" then
+		SetupElement(DexConfig, frame, nil, Dex)
+	else
+		if OrionLib then
+			OrionLib.CallbackTargets = OrionLib.CallbackTargets or {}
+			if DexConfig and DexConfig.Name then OrionLib.CallbackTargets[tostring(DexConfig.Name)] = Dex end
+		end
+		function Dex:SetVisible(value)
+			if frame then frame.Visible = value ~= false end
+			return self
+		end
+		function Dex:Destroy()
+			self:Clear()
+			if frame then frame:Destroy() end
+			return self
+		end
+	end
 	return Dex
 end
 ElementFunction.AddDEX = ElementFunction.AddDex
