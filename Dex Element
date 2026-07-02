@@ -5905,7 +5905,7 @@ local function main()
 		local funcs = {}
 		local static = {MinWidth = 200, FreeWidth = 200}
 		local mouse = plr:GetMouse()
-		local sidesGui,alignIndicator
+		local sidesGui,alignIndicator,sideLeftToggle,sideRightToggle
 		local visibleWindows = {}
 		local leftSide = {Width = 300, Windows = {}, ResizeCons = {}, Hidden = true}
 		local rightSide = {Width = 300, Windows = {}, ResizeCons = {}, Hidden = true}
@@ -6264,8 +6264,9 @@ local function main()
 			local leftPos = (leftHidden and UDim2.new(0,-leftSide.Width-10,0,0) or UDim2.new(0,0,0,0))
 			local rightPos = (rightHidden and UDim2.new(1,10,0,0) or UDim2.new(1,-rightSide.Width,0,0))
 
-			sidesGui.LeftToggle.Text = leftHidden and ">" or "<"
-			sidesGui.RightToggle.Text = rightHidden and "<" or ">"
+			if not sideLeftToggle or not sideRightToggle then return end
+			sideLeftToggle.Text = leftHidden and ">" or "<"
+			sideRightToggle.Text = rightHidden and "<" or ">"
 
 			if not noTween then
 				local function insertTween(...)
@@ -6275,13 +6276,13 @@ local function main()
 				end
 				insertTween(leftSide.Frame,sideTweenInfo,{Position = leftPos})
 				insertTween(rightSide.Frame,sideTweenInfo,{Position = rightPos})
-				insertTween(sidesGui.LeftToggle,sideTweenInfo,{Position = UDim2.new(0,#leftSide.Windows == 0 and -16 or 0,0,-36)})
-				insertTween(sidesGui.RightToggle,sideTweenInfo,{Position = UDim2.new(1,#rightSide.Windows == 0 and 0 or -16,0,-36)})
+				insertTween(sideLeftToggle,sideTweenInfo,{Position = UDim2.new(0,#leftSide.Windows == 0 and -16 or 0,0,-36)})
+				insertTween(sideRightToggle,sideTweenInfo,{Position = UDim2.new(1,#rightSide.Windows == 0 and 0 or -16,0,-36)})
 			else
 				leftSide.Frame.Position = leftPos
 				rightSide.Frame.Position = rightPos
-				sidesGui.LeftToggle.Position = UDim2.new(0,#leftSide.Windows == 0 and -16 or 0,0,-36)
-				sidesGui.RightToggle.Position = UDim2.new(1,#rightSide.Windows == 0 and 0 or -16,0,-36)
+				sideLeftToggle.Position = UDim2.new(0,#leftSide.Windows == 0 and -16 or 0,0,-36)
+				sideRightToggle.Position = UDim2.new(1,#rightSide.Windows == 0 and 0 or -16,0,-36)
 			end
 		end
 
@@ -6879,7 +6880,9 @@ local function main()
 			corner.CornerRadius = UDim.new(0,10)
 
 			local leftToggle = create({{1,"TextButton",{AutoButtonColor=false,BackgroundColor3=Color3.new(0.20392157137394,0.20392157137394,0.20392157137394),BorderColor3=Color3.new(0.14117647707462,0.14117647707462,0.14117647707462),BorderMode=2,Font=10,Name="LeftToggle",Position=UDim2.new(0,0,0,-36),Size=UDim2.new(0,16,0,36),Text="<",TextColor3=Color3.new(1,1,1),TextSize=14,}}})
+			sideLeftToggle = leftToggle
 			local rightToggle = leftToggle:Clone()
+			sideRightToggle = rightToggle
 			rightToggle.Name = "RightToggle"
 			rightToggle.Position = UDim2.new(1,-16,0,-36)
 			Lib.ButtonAnim(leftToggle,{Mode = 2,PressColor = Color3.fromRGB(32,32,32)})
@@ -16319,11 +16322,7 @@ if getgenv then
 				if child:IsA("GuiObject") then
 					child.Parent = bucket
 					child.Active = true
-					if child.Name == "Main" or gui.Name == "Window" then
-						child.AnchorPoint = Vector2.new(0, 0)
-						child.Position = UDim2.new(0, 0, 0, 0)
-						child.Size = UDim2.new(1, 0, 1, 0)
-					elseif gui.Name == "MainMenu" then
+					if child.Name == "Main" or gui.Name == "Window" or gui.Name == "MainMenu" then
 						child.AnchorPoint = Vector2.new(0, 0)
 						child.Position = UDim2.new(0, 0, 0, 0)
 						child.Size = UDim2.new(1, 0, 1, 0)
